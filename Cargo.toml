@@ -1,0 +1,10 @@
+[package]
+name = "csv-to-json"
+version = "0.1.0"
+authors = ["Daniel Mason <daniel.mason@apolitical.co>"]
+
+[dependencies]
+clap = "^2.31"
+csv = "^0.15"
+serde = "^1.0"
+serde_json = "^1.0"
