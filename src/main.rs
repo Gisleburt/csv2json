@@ -9,6 +9,7 @@ use clap::{Arg, App};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use serde_json::Value as JsonValue;
+use serde_json::map::Entry as JsonEntry;
 
 fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
     let separator = ".";
@@ -30,13 +31,57 @@ fn prepare_upsert(entry: Entry<String, JsonValue>, data: JsonValue) -> JsonValue
     match entry {
         Entry::Vacant(_) => data,
         Entry::Occupied(e) => {
-            match e.remove() {
-                JsonValue::String(s) => json!([s, data]),
-                JsonValue::Array(mut a) => {a.push(data); json!(a)},
-                current_value => current_value,
-            }
+            let old_value = e.remove();
+            merge_values(old_value, data)
         }
     }
+}
+
+fn merge_values(v1: JsonValue, v2: JsonValue) -> JsonValue {
+    // If both values are objects combine on keys
+    if v1.is_object() && v2.is_object() {
+        if let JsonValue::Object(mut o1) = v1 {
+            if let JsonValue::Object(mut o2) = v2 {
+                o2.into_iter()
+                    .for_each(|(key2, value2)| {
+                        let replacement = match o1.entry(key2.to_owned()) {
+                            JsonEntry::Vacant(_) => value2,
+                            JsonEntry::Occupied(e) => {
+                                let value1 = e.remove();
+                                merge_values(value1, value2)
+                            }
+                        };
+                        o1.insert(key2, replacement);
+                    });
+                return json!(o1);
+            }
+            panic!("This isn't possible");
+        }
+    }
+
+    // If both values are arrays, add the other to it.
+    if v1.is_array() && v2.is_array() {
+        if let JsonValue::Array(mut a1) = v1 {
+            if let JsonValue::Array(mut a2) = v2 {
+                a1.append(&mut a2);
+                return json!(a1);
+            }
+            panic!("This isn't possible");
+        }
+    }
+
+    // If either is an array add the other to it.
+    if let JsonValue::Array(mut a1) = v1 {
+        a1.push(v2);
+        return json!(a1);
+    }
+    if let JsonValue::Array(mut a2) = v2 {
+        a2.push(v1);
+        return json!(a2);
+    }
+
+    // Otherwise create a new array with both items
+    json!([v1, v2])
 }
 
 fn row_to_object(headers: &Vec<String>, row: Vec<String>) -> HashMap<String, JsonValue> {
