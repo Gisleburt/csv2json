@@ -4,12 +4,12 @@ extern crate serde;
 #[macro_use]
 extern crate serde_json;
 
-use clap::{Arg, App};
-
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use serde_json::Value as JsonValue;
 use serde_json::map::Entry as JsonEntry;
+
+mod cli;
 
 fn dimensional_converter(key: String, value: String, ds: &Option<&str>) -> (String, JsonValue) {
     if let &Some(separator) = ds {
@@ -94,30 +94,10 @@ fn row_to_object(headers: &Vec<String>, row: Vec<String>, ds: Option<&str>) -> H
 }
 
 fn main() {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .arg(
-            Arg::with_name("in")
-                .short("i")
-                .long("in")
-                .value_name("in")
-                .help("The csv file to read")
-                .takes_value(true)
-                .required(true)
-        )
-        .arg(
-            Arg::with_name("dimensional-separator")
-                .short("d")
-                .long("dimensional-separator")
-                .value_name("dimensional-separator")
-                .help("A separator to break header names allowing you to create deeper objects")
-                .takes_value(true)
-        )
-        .get_matches();
+    let cli_helper = cli::get_cli_helper();
 
-    let csv_file = matches.value_of("in").expect("You must specify an input csv with --in");
-    let ds = matches.value_of("dimensional-separator");
+    let csv_file = cli_helper.value_of("in").expect("You must specify an input csv with --in");
+    let ds = cli_helper.value_of("dimensional-separator");
     let mut csv_reader = csv::Reader::from_file(csv_file).expect("Could not read csv file");
 
     let headers = csv_reader.headers().unwrap();
