@@ -2,8 +2,12 @@
 name = "csv2json"
 description = "Converts CSVs into JSON documents"
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel Mason <daniel.mason@apolitical.co>"]
+repository = "https://github.com/apolitical/csv2json"
+readme = "README.md"
+keywords = ["csv", "json", "cli"]
+categories = ["command-line-interface", "data-structues"]
 
 [dependencies]
 clap = "^2.31"
