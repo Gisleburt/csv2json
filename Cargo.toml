@@ -7,7 +7,7 @@ authors = ["Daniel Mason <daniel.mason@apolitical.co>"]
 repository = "https://github.com/apolitical/csv2json"
 readme = "README.md"
 keywords = ["csv", "json", "cli"]
-categories = ["command-line-interface", "data-structues"]
+categories = ["command-line-interface", "data-structures"]
 
 [dependencies]
 clap = "^2.31"
