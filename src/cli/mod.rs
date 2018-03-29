@@ -1,6 +1,10 @@
 use clap::{App, Arg, ArgMatches};
 
-pub fn get_cli_helper<'a>() -> ArgMatches<'a> {
+pub fn get_matches<'a>() -> ArgMatches<'a> {
+    configure_app().get_matches()
+}
+
+fn configure_app<'a, 'b>() -> App<'a, 'b> {
     App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
@@ -21,5 +25,13 @@ pub fn get_cli_helper<'a>() -> ArgMatches<'a> {
                 .help("A separator to break header names allowing you to create deeper objects")
                 .takes_value(true),
         )
-        .get_matches()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_has_the_correct_name() {
+        let app = super::configure_app();
+        assert_eq!(app.get_name(), "csv2json");
+    }
 }

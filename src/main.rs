@@ -11,12 +11,12 @@ use std::collections::HashMap;
 use serde_json::Value as JsonValue;
 
 fn main() {
-    let cli_helper = cli::get_cli_helper();
+    let cli_matches = cli::get_matches();
 
-    let csv_file = cli_helper
+    let csv_file = cli_matches
         .value_of("in")
         .expect("You must specify an input csv with --in");
-    let ds = cli_helper.value_of("dimensional-separator");
+    let ds = cli_matches.value_of("dimensional-separator");
     let mut csv_reader = csv::Reader::from_file(csv_file).expect("Could not read csv file");
 
     let headers = csv_reader.headers().unwrap();
