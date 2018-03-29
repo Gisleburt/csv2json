@@ -23,8 +23,8 @@ fn dimensional_converter(key: String, value: String, ds: &Option<&str>) -> (Stri
         if key.contains(separator) {
             let mut parts = key.split(separator);
             let this_key = parts.next().unwrap().to_owned();
-            let next_key = parts.collect::<Vec<&str>>().join(".").to_owned();
-            let (_, data) = dimensional_converter(next_key.clone(), value, &Some(separator));
+            let key_chain = parts.collect::<Vec<&str>>().join(".").to_owned();
+            let (next_key, data) = dimensional_converter(key_chain, value, &Some(separator));
             return (this_key, json!({ next_key: data }));
         }
     }
@@ -90,6 +90,39 @@ fn merge_values(v1: JsonValue, v2: JsonValue) -> JsonValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod dimensional_converter {
+        #[test]
+        fn it_does_simple_json_conversion_with_no_separator() {
+            let key = String::from("first.second.third");
+            let value = String::from("value");
+            assert_eq!(
+                super::dimensional_converter(key, value, &None),
+                (String::from("first.second.third"), json!("value"))
+            )
+        }
+
+        #[test]
+        fn it_creates_objects_on_separation() {
+            let key = String::from("first.second.third");
+            let value = String::from("value");
+            assert_eq!(
+                super::dimensional_converter(key, value, &Some(".")),
+                (String::from("first"), json!({"second":{"third":"value"}}))
+            )
+        }
+
+        #[test]
+        fn it_does_simple_json_conversion_when_seperator_not_found() {
+            let key = String::from("first.second.third");
+            let value = String::from("value");
+            assert_eq!(
+                super::dimensional_converter(key, value, &Some("-")),
+                (String::from("first.second.third"), json!("value"))
+            )
+        }
+    }
+
     mod merge_values {
         #[test]
         fn it_merges_scalars_correctly() {
