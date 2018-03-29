@@ -86,3 +86,41 @@ fn merge_values(v1: JsonValue, v2: JsonValue) -> JsonValue {
     // Otherwise create a new array with both items
     json!([v1, v2])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    mod merge_values {
+        #[test]
+        fn it_merges_scalars_correctly() {
+            let v1 = json!("v1");
+            let v2 = json!("v2");
+            assert_eq!(super::merge_values(v1, v2), json!(["v1", "v2"]));
+        }
+
+        #[test]
+        fn it_merges_a_scalars_with_an_array_correctly() {
+            let v1 = json!(["v1"]);
+            let v2 = json!("v2");
+            assert_eq!(super::merge_values(v1, v2), json!(["v1", "v2"]));
+
+            let v1 = json!("v1");
+            let v2 = json!(["v2"]);
+            assert_eq!(super::merge_values(v1, v2), json!(["v2", "v1"])); // v1 added to existing v2
+        }
+
+        #[test]
+        fn it_merges_two_arrays_correctly() {
+            let v1 = json!(["v1"]);
+            let v2 = json!(["v2"]);
+            assert_eq!(super::merge_values(v1, v2), json!(["v1", "v2"]));
+        }
+
+        #[test]
+        fn it_merges_two_objects_correctly() {
+            let v1 = json!({"k1":"v1"});
+            let v2 = json!({"k2":"v2"});
+            assert_eq!(super::merge_values(v1, v2), json!({"k1":"v1", "k2":"v2"}));
+        }
+    }
+}
