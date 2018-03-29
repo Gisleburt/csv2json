@@ -1,11 +1,29 @@
 extern crate clap;
 extern crate csv;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 use clap::{Arg, App};
 
 use std::collections::HashMap;
+use serde_json::Value as JsonValue;
+
+fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
+    let separator = ".";
+    if key.contains(separator) {
+        let mut parts = key.split(separator);
+        let this_key = parts.next().unwrap().to_owned();
+        let next_key = parts.collect::<Vec<&str>>().join(".").to_owned();
+        let (_, data)  = dimensional_converter(next_key.clone(), value);
+        return (
+            this_key,
+            json!({next_key: data})
+        )
+
+    }
+    (key, json!(value))
+}
 
 fn main() {
     let matches = App::new(env!("CARGO_PKG_NAME"))
@@ -36,7 +54,7 @@ fn main() {
 
     let headers = csv_reader.headers().unwrap();
 
-    let data: Vec<HashMap<String, String>> = csv_reader.records()
+    let data: Vec<HashMap<String, JsonValue>> = csv_reader.records()
         .map(|row| row.unwrap())
         .map(
             |row| {
@@ -44,7 +62,10 @@ fn main() {
                 row.iter()
                     .cloned()
                     .zip(headers.iter().cloned())
-                    .for_each(|(a, b)| { let _ = items.insert(b,a); });
+                    .for_each(|(value, key)| {
+                        let (k, v) = dimensional_converter(key, value);
+                        items.insert(k, v);
+                    });
                 items
             }
         )
