@@ -32,6 +32,7 @@ fn prepare_upsert(entry: Entry<String, JsonValue>, data: JsonValue) -> JsonValue
         Entry::Occupied(e) => {
             match e.remove() {
                 JsonValue::String(s) => json!([s, data]),
+                JsonValue::Array(mut a) => {a.push(data); json!(a)},
                 current_value => current_value,
             }
         }
