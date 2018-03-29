@@ -16,12 +16,9 @@ fn dimensional_converter(key: String, value: String, ds: &Option<&str>) -> (Stri
         if key.contains(separator) {
             let mut parts = key.split(separator);
             let this_key = parts.next().unwrap().to_owned();
-            let next_key = parts.collect::<Vec<&str>>().join(".").to_owned();
-            let (_, data)  = dimensional_converter(next_key.clone(), value, &Some(separator));
-            return (
-                this_key,
-                json!({next_key: data})
-            )
+            let key_chain = parts.collect::<Vec<&str>>().join(".").to_owned();
+            let (next_key, data) = dimensional_converter(key_chain, value, &Some(separator));
+            return (this_key, json!({ next_key: data }));
 
         }
     }
