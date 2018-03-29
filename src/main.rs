@@ -27,10 +27,10 @@ fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
 
 fn row_to_object(headers: &Vec<String>, row: Vec<String>) -> HashMap<String, JsonValue> {
     let mut items = HashMap::new();
-    row.iter()
+    headers.iter()
         .cloned()
-        .zip(headers.iter().cloned())
-        .for_each(|(value, key)| {
+        .zip(row.iter().cloned())
+        .for_each(|(key, value)| {
             let (k, v) = dimensional_converter(key, value);
             items.insert(k, v);
         });
