@@ -25,6 +25,18 @@ fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
     (key, json!(value))
 }
 
+fn row_to_object(headers: &Vec<String>, row: Vec<String>) -> HashMap<String, JsonValue> {
+    let mut items = HashMap::new();
+    row.iter()
+        .cloned()
+        .zip(headers.iter().cloned())
+        .for_each(|(value, key)| {
+            let (k, v) = dimensional_converter(key, value);
+            items.insert(k, v);
+        });
+    items
+}
+
 fn main() {
     let matches = App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -54,21 +66,10 @@ fn main() {
 
     let headers = csv_reader.headers().unwrap();
 
-    let data: Vec<HashMap<String, JsonValue>> = csv_reader.records()
-        .map(|row| row.unwrap())
-        .map(
-            |row| {
-                let mut items = HashMap::new();
-                row.iter()
-                    .cloned()
-                    .zip(headers.iter().cloned())
-                    .for_each(|(value, key)| {
-                        let (k, v) = dimensional_converter(key, value);
-                        items.insert(k, v);
-                    });
-                items
-            }
-        )
+    let data: Vec<HashMap<String, JsonValue>> = csv_reader.records() //
+        .filter(|row| row.is_ok()) // Skip anything we can't read
+        .map(|row| row.unwrap()) // It's now safe to unwrap
+        .map(|row| row_to_object(&headers, row)) // Turn the row into an object
         .collect();
 
     println!("{}", serde_json::to_string_pretty(&data).unwrap());
