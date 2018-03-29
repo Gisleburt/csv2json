@@ -7,6 +7,7 @@ extern crate serde_json;
 use clap::{Arg, App};
 
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use serde_json::Value as JsonValue;
 
 fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
@@ -25,15 +26,26 @@ fn dimensional_converter(key: String, value: String) -> (String, JsonValue) {
     (key, json!(value))
 }
 
+fn prepare_upsert(entry: Entry<String, JsonValue>, data: JsonValue) -> JsonValue {
+    match entry {
+        Entry::Vacant(_) => data,
+        Entry::Occupied(e) => {
+            match e.remove() {
+                JsonValue::String(s) => json!([s, data]),
+                current_value => current_value,
+            }
+        }
+    }
+}
+
 fn row_to_object(headers: &Vec<String>, row: Vec<String>) -> HashMap<String, JsonValue> {
     let mut items = HashMap::new();
-    headers.iter()
-        .cloned()
-        .zip(row.iter().cloned())
-        .for_each(|(key, value)| {
-            let (k, v) = dimensional_converter(key, value);
-            items.insert(k, v);
-        });
+    let data_iter = headers.iter().cloned().zip(row.iter().cloned());
+    for (key, value) in data_iter {
+        let (key, value) = dimensional_converter(key, value);
+        let prepared_value = prepare_upsert(items.entry(key.clone()), value);
+        items.insert(key, prepared_value);
+    }
     items
 }
 
